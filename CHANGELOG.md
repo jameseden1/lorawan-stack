@@ -11,6 +11,8 @@ For details about compatibility between different releases, see the **Commitment
 
 ### Added
 - Add configurable storage limit to device's DevNonce in the JoinServer. Can be configured using the option `js.dev-nonce-limit`.
+- Add `network_server_address`, `application_server_address` and `join_server_address` to applications.
+  - This requires a database schema migration (`ttn-lw-stack is-db migrate`) because of the added columns.
 
 ### Changed
 
