@@ -108,10 +108,14 @@ func (s *Server) Roles() []ttnpb.ClusterRole {
 }
 
 // RegisterServices registers services provided by gcs at s.
-func (s *Server) RegisterServices(_ *grpc.Server) {}
+func (s *Server) RegisterServices(grpcServer *grpc.Server) {
+	ttnpb.RegisterGatewayConfigurationServiceServer(grpcServer, s)
+}
 
 // RegisterHandlers registers gRPC handlers.
-func (s *Server) RegisterHandlers(_ *runtime.ServeMux, _ *grpc.ClientConn) {}
+func (s *Server) RegisterHandlers(mux *runtime.ServeMux, conn *grpc.ClientConn) {
+	ttnpb.RegisterGatewayConfigurationServiceHandler(s.Context(), mux, conn)
+}
 
 // RegisterRoutes registers the web frontend routes.
 func (s *Server) RegisterRoutes(server *web.Server) {
