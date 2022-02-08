@@ -75,7 +75,7 @@ func TestWeb(t *testing.T) {
 	is, isAddr, closeIS := mockis.New(ctx)
 	defer closeIS()
 
-	is.GatewayRegistry().Add(ctx, registeredGatewayID, registeredGatewayKey, false, false, ttnpb.Right_RIGHT_GATEWAY_INFO)
+	is.GatewayRegistry().Add(ctx, registeredGatewayID, registeredGatewayKey, nil, ttnpb.Right_RIGHT_GATEWAY_INFO)
 
 	fpConf := config.FrequencyPlansConfig{
 		ConfigSource: "static",

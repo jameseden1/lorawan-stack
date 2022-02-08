@@ -40,6 +40,7 @@ import (
 	. "go.thethings.network/lorawan-stack/v3/pkg/gatewayserver/io/ws"
 	"go.thethings.network/lorawan-stack/v3/pkg/gatewayserver/io/ws/lbslns"
 	"go.thethings.network/lorawan-stack/v3/pkg/gpstime"
+	mockis "go.thethings.network/lorawan-stack/v3/pkg/identityserver/mock"
 	"go.thethings.network/lorawan-stack/v3/pkg/log"
 	pfconfig "go.thethings.network/lorawan-stack/v3/pkg/pfconfig/lbslns"
 	"go.thethings.network/lorawan-stack/v3/pkg/pfconfig/shared"
@@ -79,8 +80,9 @@ func TestClientTokenAuth(t *testing.T) {
 	ctx, cancelCtx := context.WithCancel(ctx)
 	defer cancelCtx()
 
-	is, isAddr := mock.NewIS(ctx)
-	is.Add(ctx, registeredGatewayID, registeredGatewayToken)
+	is, isAddr, cancelIS := mockis.New(ctx)
+	defer cancelIS()
+	is.GatewayRegistry().Add(ctx, registeredGatewayID, registeredGatewayToken, nil, testRights...)
 	c := componenttest.NewComponent(t, &component.Config{
 		ServiceBase: config.ServiceBase{
 			GRPC: config.GRPC{
@@ -99,7 +101,7 @@ func TestClientTokenAuth(t *testing.T) {
 	componenttest.StartComponent(t, c)
 	defer c.Close()
 	mustHavePeer(ctx, c, ttnpb.ClusterRole_ENTITY_REGISTRY)
-	gs := mock.NewServer(c)
+	gs := mock.NewServer(c, is)
 
 	for _, ttc := range []struct {
 		Name                 string
@@ -215,8 +217,10 @@ func TestDiscover(t *testing.T) {
 	ctx, cancelCtx := context.WithCancel(ctx)
 	defer cancelCtx()
 
-	is, isAddr := mock.NewIS(ctx)
-	is.Add(ctx, registeredGatewayID, registeredGatewayToken)
+	is, isAddr, cancelIS := mockis.New(ctx)
+	defer cancelIS()
+	is.GatewayRegistry().Add(ctx, registeredGatewayID, registeredGatewayToken, nil, testRights...)
+
 	c := componenttest.NewComponent(t, &component.Config{
 		ServiceBase: config.ServiceBase{
 			GRPC: config.GRPC{
@@ -235,7 +239,7 @@ func TestDiscover(t *testing.T) {
 	componenttest.StartComponent(t, c)
 	defer c.Close()
 	mustHavePeer(ctx, c, ttnpb.ClusterRole_ENTITY_REGISTRY)
-	gs := mock.NewServer(c)
+	gs := mock.NewServer(c, is)
 
 	web, err := New(ctx, gs, lbslns.NewFormatter(maxValidRoundTripDelay), defaultConfig)
 	if !a.So(err, should.BeNil) {
@@ -478,6 +482,10 @@ func TestVersion(t *testing.T) {
 	ctx, cancelCtx := context.WithCancel(ctx)
 	defer cancelCtx()
 
+	is, _, cancelIS := mockis.New(ctx)
+	defer cancelIS()
+	is.GatewayRegistry().Add(ctx, registeredGatewayID, registeredGatewayToken, nil, testRights...)
+
 	c := componenttest.NewComponent(t, &component.Config{
 		ServiceBase: config.ServiceBase{
 			GRPC: config.GRPC{
@@ -492,7 +500,7 @@ func TestVersion(t *testing.T) {
 	})
 	componenttest.StartComponent(t, c)
 	defer c.Close()
-	gs := mock.NewServer(c)
+	gs := mock.NewServer(c, is)
 
 	gs.RegisterGateway(ctx, registeredGatewayID, &ttnpb.Gateway{
 		Ids:             &registeredGatewayID,
@@ -745,8 +753,9 @@ func TestTraffic(t *testing.T) {
 	ctx, cancelCtx := context.WithCancel(ctx)
 	defer cancelCtx()
 
-	is, isAddr := mock.NewIS(ctx)
-	is.Add(ctx, registeredGatewayID, registeredGatewayToken)
+	is, isAddr, cancelIS := mockis.New(ctx)
+	defer cancelIS()
+	is.GatewayRegistry().Add(ctx, registeredGatewayID, registeredGatewayToken, nil, testRights...)
 	c := componenttest.NewComponent(t, &component.Config{
 		ServiceBase: config.ServiceBase{
 			GRPC: config.GRPC{
@@ -765,7 +774,7 @@ func TestTraffic(t *testing.T) {
 	componenttest.StartComponent(t, c)
 	defer c.Close()
 	mustHavePeer(ctx, c, ttnpb.ClusterRole_ENTITY_REGISTRY)
-	gs := mock.NewServer(c)
+	gs := mock.NewServer(c, is)
 
 	web, err := New(ctx, gs, lbslns.NewFormatter(maxValidRoundTripDelay), defaultConfig)
 	if !a.So(err, should.BeNil) {
@@ -1208,8 +1217,10 @@ func TestRTT(t *testing.T) {
 	ctx, cancelCtx := context.WithCancel(ctx)
 	defer cancelCtx()
 
-	is, isAddr := mock.NewIS(ctx)
-	is.Add(ctx, registeredGatewayID, registeredGatewayToken)
+	is, isAddr, cancelIS := mockis.New(ctx)
+	defer cancelIS()
+	is.GatewayRegistry().Add(ctx, registeredGatewayID, registeredGatewayToken, nil, testRights...)
+
 	c := componenttest.NewComponent(t, &component.Config{
 		ServiceBase: config.ServiceBase{
 			GRPC: config.GRPC{
@@ -1228,7 +1239,7 @@ func TestRTT(t *testing.T) {
 	componenttest.StartComponent(t, c)
 	defer c.Close()
 	mustHavePeer(ctx, c, ttnpb.ClusterRole_ENTITY_REGISTRY)
-	gs := mock.NewServer(c)
+	gs := mock.NewServer(c, is)
 
 	web, err := New(ctx, gs, lbslns.NewFormatter(maxValidRoundTripDelay), defaultConfig)
 	if !a.So(err, should.BeNil) {
@@ -1534,8 +1545,10 @@ func TestPingPong(t *testing.T) {
 	ctx, cancelCtx := context.WithCancel(ctx)
 	defer cancelCtx()
 
-	is, isAddr := mock.NewIS(ctx)
-	is.Add(ctx, registeredGatewayID, registeredGatewayToken)
+	is, isAddr, cancelIS := mockis.New(ctx)
+	defer cancelIS()
+	is.GatewayRegistry().Add(ctx, registeredGatewayID, registeredGatewayToken, nil, testRights...)
+
 	c := componenttest.NewComponent(t, &component.Config{
 		ServiceBase: config.ServiceBase{
 			GRPC: config.GRPC{
@@ -1554,7 +1567,7 @@ func TestPingPong(t *testing.T) {
 	componenttest.StartComponent(t, c)
 	defer c.Close()
 	mustHavePeer(ctx, c, ttnpb.ClusterRole_ENTITY_REGISTRY)
-	gs := mock.NewServer(c)
+	gs := mock.NewServer(c, is)
 
 	web, err := New(ctx, gs, lbslns.NewFormatter(maxValidRoundTripDelay), defaultConfig)
 	if !a.So(err, should.BeNil) {
@@ -1734,7 +1747,7 @@ func TestRateLimit(t *testing.T) {
 				Associations: []string{"gs:accept:ws"},
 			}},
 		}
-		withServer(t, defaultConfig, conf, func(t *testing.T, _ *mock.IdentityServer, serverAddress string) {
+		withServer(t, defaultConfig, conf, func(t *testing.T, _ *mockis.MockDefinition, serverAddress string) {
 			a := assertions.New(t)
 			for i := uint(0); i < maxRate; i++ {
 				conn, _, err := websocket.DefaultDialer.Dial(serverAddress+testTrafficEndPoint, nil)
