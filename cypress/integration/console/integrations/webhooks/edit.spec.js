@@ -79,8 +79,8 @@ describe('Application Webhook', () => {
   it('succeeds adding application attributes', () => {
     cy.findByRole('button', { name: /Add header entry/ }).click()
 
-    cy.findByTestId('headers[0].key').type('webhook-test-key')
-    cy.findByTestId('headers[0].value').type('webhook-test-value')
+    cy.findByTestId('_headers[0].key').type('webhook-test-key')
+    cy.findByTestId('_headers[0].value').type('webhook-test-value')
 
     cy.findByRole('button', { name: 'Save changes' }).click()
 
