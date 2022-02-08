@@ -28,6 +28,24 @@ import (
 
 var errNoGatewayRights = errors.DefinePermissionDenied("no_gateway_rights", "no gateway rights")
 
+func DefaultGateway(ids ttnpb.GatewayIdentifiers) *ttnpb.Gateway {
+	return &ttnpb.Gateway{
+		Ids:              &ids,
+		FrequencyPlanId:  test.EUFrequencyPlanID,
+		FrequencyPlanIds: []string{test.EUFrequencyPlanID},
+		Antennas: []*ttnpb.GatewayAntenna{
+			{
+				Location: &ttnpb.Location{
+					Source: ttnpb.LocationSource_SOURCE_REGISTRY,
+				},
+			},
+		},
+		GatewayServerAddress:     "mockgatewayserver",
+		LocationPublic:           false,
+		UpdateLocationFromStatus: false,
+	}
+}
+
 type mockISGatewayRegistry struct {
 	ttnpb.GatewayRegistryServer
 	ttnpb.GatewayAccessServer
@@ -42,22 +60,13 @@ func (is *mockISGatewayRegistry) SetRegisteredGateway(gtwIDs *ttnpb.GatewayIdent
 	is.registeredGateway = gtwIDs
 }
 
-func (is *mockISGatewayRegistry) Add(ctx context.Context, ids ttnpb.GatewayIdentifiers, key string, locationPublic, updateLocationFromStatus bool, rights ...ttnpb.Right) {
+// Add gateway to the mock registry. If gateway is not specified the mockis.DefaultGateway will be used
+func (is *mockISGatewayRegistry) Add(ctx context.Context, ids ttnpb.GatewayIdentifiers, key string, gtw *ttnpb.Gateway, rights ...ttnpb.Right) {
 	uid := unique.ID(ctx, ids)
-	is.gateways[uid] = &ttnpb.Gateway{
-		Ids:              &ids,
-		FrequencyPlanId:  test.EUFrequencyPlanID,
-		FrequencyPlanIds: []string{test.EUFrequencyPlanID},
-		Antennas: []*ttnpb.GatewayAntenna{
-			{
-				Location: &ttnpb.Location{
-					Source: ttnpb.LocationSource_SOURCE_REGISTRY,
-				},
-			},
-		},
-		GatewayServerAddress:     "mockgatewayserver",
-		LocationPublic:           locationPublic,
-		UpdateLocationFromStatus: updateLocationFromStatus,
+	if gtw == nil {
+		is.gateways[uid] = DefaultGateway(ids)
+	} else {
+		is.gateways[uid] = gtw
 	}
 
 	var bearerKey string
