@@ -119,13 +119,21 @@ func (s *srv) handleConnectionInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	scheme := "ws"
+	port := "80"
 	if r.TLS != nil || s.cfg.UseTrafficTLSAddress {
 		scheme = "wss"
+		port = "443"
+	}
+
+	// Get the port (if r.Host contains it)
+	address_split := strings.Split(r.Host, ":")
+	if len(address_split) == 2 {
+		port = address_split[1]
 	}
 
 	info := ServerInfo{
 		Scheme:  scheme,
-		Address: r.Host,
+		Address: fmt.Sprintf("%s:%s", address_split[0], port),
 	}
 
 	resp := s.formatter.HandleConnectionInfo(ctx, data, s.server, info, time.Now())
